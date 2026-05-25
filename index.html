@@ -5,30 +5,29 @@
 <title>Recovery Room — Story Generator</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:system-ui,sans-serif;background:#f0f0f0;padding:1.5rem;color:#222}
-.app{display:grid;grid-template-columns:300px 1fr;gap:1.5rem;align-items:start}
-.panel{background:#fff;border:1px solid #ddd;border-radius:12px;padding:1.25rem;display:flex;flex-direction:column;gap:1rem}
-.panel h3{font-size:11px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:.06em}
+body{font-family:system-ui,sans-serif;background:#1a1a1a;padding:1.5rem;color:#eee}
+.app{display:grid;grid-template-columns:280px 1fr;gap:1.5rem;align-items:start}
+.panel{background:#242424;border:1px solid #333;border-radius:12px;padding:1.25rem;display:flex;flex-direction:column;gap:.9rem}
+.panel h3{font-size:10px;font-weight:700;color:#666;text-transform:uppercase;letter-spacing:.08em}
 .field{display:flex;flex-direction:column;gap:4px}
-.field label{font-size:13px;color:#555}
-.field input,.field textarea{font-size:14px;padding:8px 10px;border:1px solid #ccc;border-radius:8px;background:#fafafa;font-family:inherit;outline:none}
-.field input:focus,.field textarea:focus{border-color:#0A3A52}
-.field textarea{height:70px;resize:none}
-.char{font-size:11px;color:#aaa;text-align:right}
+.field label{font-size:12px;color:#aaa;display:flex;justify-content:space-between}
+.field input,.field textarea{font-size:14px;padding:8px 10px;border:1px solid #444;border-radius:8px;background:#1a1a1a;color:#eee;font-family:inherit;outline:none}
+.field input:focus,.field textarea:focus{border-color:#E8632A}
+.field textarea{height:68px;resize:none}
 .templates{display:flex;flex-wrap:wrap;gap:6px}
-.tpl-btn{font-size:12px;padding:5px 12px;border:1px solid #ccc;border-radius:6px;cursor:pointer;background:#f5f5f5;transition:all .15s}
-.tpl-btn.active{background:#0A3A52;color:#B8E4F4;border-color:#0A3A52}
+.tpl-btn{font-size:11px;padding:5px 10px;border:1px solid #444;border-radius:6px;cursor:pointer;background:#1a1a1a;color:#aaa;transition:all .15s}
+.tpl-btn.active{background:#E8632A;color:#fff;border-color:#E8632A}
 .bg-opts{display:flex;gap:8px}
-.bg-swatch{width:32px;height:32px;border-radius:6px;border:3px solid transparent;cursor:pointer;transition:border-color .15s}
+.bg-swatch{width:30px;height:30px;border-radius:6px;border:3px solid transparent;cursor:pointer;transition:border-color .15s}
 .bg-swatch.active{border-color:#E8632A}
-.preview-wrap{display:flex;flex-direction:column;align-items:center;gap:.75rem}
-.preview-label{font-size:12px;color:#666}
-.canvas-container{border-radius:12px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.2)}
+.preview-wrap{display:flex;flex-direction:column;align-items:center;gap:.6rem}
+.preview-label{font-size:11px;color:#666}
+.canvas-container{border-radius:10px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.5)}
 canvas{display:block}
-.dl-btn{width:100%;padding:11px;background:#E8632A;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;transition:opacity .15s}
-.dl-btn:hover{opacity:.88}
-.divider{height:1px;background:#eee}
-.safe-note{font-size:11px;color:#999;text-align:center}
+.dl-btn{width:100%;padding:11px;background:#E8632A;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;letter-spacing:.03em;transition:opacity .15s}
+.dl-btn:hover{opacity:.85}
+.divider{height:1px;background:#333}
+.safe-note{font-size:10px;color:#555;text-align:center}
 </style>
 </head>
 <body>
@@ -45,60 +44,40 @@ canvas{display:block}
     <div class="divider"></div>
     <h3>Contenido</h3>
     <div class="field">
-      <label>Headline <span id="hl-cnt" class="char">0/50</span></label>
+      <label>Headline <span id="hl-cnt">0/50</span></label>
       <input type="text" id="headline" maxlength="50" placeholder="Tu titular aquí..." oninput="upd()">
     </div>
     <div class="field">
-      <label>Copy <span id="cp-cnt" class="char">0/100</span></label>
-      <textarea id="copy" maxlength="100" placeholder="Texto descriptivo..." oninput="upd()"></textarea>
+      <label>Copy <span id="cp-cnt">0/100</span></label>
+      <textarea id="copy" maxlength="100" placeholder="Texto de apoyo..." oninput="upd()"></textarea>
     </div>
     <div class="field" id="cta-field">
-      <label>CTA <span id="cta-cnt" class="char">0/35</span></label>
+      <label>CTA <span id="cta-cnt">0/35</span></label>
       <input type="text" id="cta" maxlength="35" placeholder="Reservá tu sesión" oninput="upd()">
     </div>
     <div class="divider"></div>
     <h3>Fondo</h3>
     <div class="bg-opts">
-      <div class="bg-swatch active" style="background:#0A3A52" title="Navy" onclick="setBg('#0A3A52',this)"></div>
-      <div class="bg-swatch" style="background:#ffffff;border-color:#ccc" title="Blanco" onclick="setBg('#ffffff',this)"></div>
-      <div class="bg-swatch" style="background:#B8E4F4" title="Cyan" onclick="setBg('#B8E4F4',this)"></div>
+      <div class="bg-swatch active" style="background:#0A3A52" onclick="setBg('#0A3A52',this)" title="Navy"></div>
+      <div class="bg-swatch" style="background:#fff;border-color:#555" onclick="setBg('#ffffff',this)" title="Blanco"></div>
+      <div class="bg-swatch" style="background:#B8E4F4" onclick="setBg('#B8E4F4',this)" title="Cyan"></div>
     </div>
     <div class="divider"></div>
     <button class="dl-btn" onclick="download()">⬇ Descargar PNG 1080×1920</button>
   </div>
   <div class="preview-wrap">
-    <div class="preview-label">Preview escalado — canvas real 1080×1920 px</div>
-    <div class="canvas-container">
-      <canvas id="cv"></canvas>
-    </div>
-    <div class="safe-note">🔒 Zona segura activa — compatible con UI de Instagram</div>
+    <div class="preview-label">Preview — canvas real 1080×1920 px</div>
+    <div class="canvas-container"><canvas id="cv"></canvas></div>
+    <div class="safe-note">🔒 Zona segura Instagram activa</div>
   </div>
 </div>
 
 <script>
-// ── Constantes globales ──────────────────────────────────────────────
-const W = 1080, H = 1920;
-const PREVIEW_H = 600; // altura fija del preview en pantalla
-const NAVY='#0A3A52', ORANGE='#E8632A', CYAN='#B8E4F4', WHITE='#FFFFFF';
-
-// Zonas fijas en px sobre canvas 1080×1920
-// Header:  y 260–390
-// Content: y 420–1530
-// Footer:  y 1560–1660
-const HEADER_Y   = 320;   // baseline del texto header
-const HEADER_SEP = 390;   // línea separadora header
-const CONTENT_TOP= 460;   // inicio zona contenido
-const CONTENT_BOT= 1530;  // fin zona contenido
-const FOOTER_SEP = 1570;
-const FOOTER_Y   = 1640;  // baseline footer
-
-// Márgenes laterales
-const MX = 80;  // margen x izquierdo para texto
-const MW = W - MX*2; // ancho máximo de texto
-
+const W=1080, H=1920;
+const PH=620; // altura preview pantalla
+const NAVY='#0A3A52', ORANGE='#E8632A', CYAN='#B8E4F4', WHITE='#fff';
 let tpl='dato', bg=NAVY;
 
-// ── Controles UI ─────────────────────────────────────────────────────
 function setTpl(t,el){
   tpl=t;
   document.querySelectorAll('.tpl-btn').forEach(b=>b.classList.remove('active'));
@@ -106,320 +85,318 @@ function setTpl(t,el){
   document.getElementById('cta-field').style.display=(t==='poll')?'none':'flex';
   upd();
 }
-function setBg(color,el){
-  bg=color;
+function setBg(col,el){
+  bg=col;
   document.querySelectorAll('.bg-swatch').forEach(s=>s.classList.remove('active'));
   el.classList.add('active');
   upd();
 }
 function upd(){
-  const hl=document.getElementById('headline').value;
-  const cp=document.getElementById('copy').value;
-  const ct=document.getElementById('cta').value;
-  document.getElementById('hl-cnt').textContent=hl.length+'/50';
-  document.getElementById('cp-cnt').textContent=cp.length+'/100';
-  document.getElementById('cta-cnt').textContent=ct.length+'/35';
+  const hl=v('headline'), cp=v('copy'), ct=v('cta');
+  cnt('hl-cnt',hl,50); cnt('cp-cnt',cp,100); cnt('cta-cnt',ct,35);
   const cv=document.getElementById('cv');
-  // Preview: escala para que quepa en PREVIEW_H
-  const scale = PREVIEW_H / H;
-  cv.width  = Math.round(W * scale);
-  cv.height = PREVIEW_H;
-  drawStory(cv, scale, hl, cp, ct);
+  const s=PH/H;
+  cv.width=Math.round(W*s); cv.height=PH;
+  render(cv,s,hl,cp,ct);
 }
+function v(id){return document.getElementById(id).value;}
+function cnt(id,val,max){document.getElementById(id).textContent=val.length+'/'+max;}
 
-// ── Función principal de dibujo ───────────────────────────────────────
-// s = escala (1 = full 1080×1920, <1 = preview)
-function drawStory(canvas, s, hl, cp, ct){
-  const c = canvas.getContext('2d');
-  const w = canvas.width, h = canvas.height;
+// ── RENDER PRINCIPAL ────────────────────────────────────────────────
+function render(canvas,s,hl,cp,ct){
+  const c=canvas.getContext('2d');
+  c.clearRect(0,0,canvas.width,canvas.height);
 
   // Fondo
-  c.fillStyle = bg;
-  c.fillRect(0,0,w,h);
+  c.fillStyle=bg; c.fillRect(0,0,canvas.width,canvas.height);
 
-  const isDark = bg === NAVY;
-  const colorText  = isDark ? WHITE   : NAVY;
-  const colorMuted = isDark ? CYAN    : '#2a6a8a';
+  const dark=bg===NAVY;
+  const cMain = dark?WHITE:NAVY;
+  const cSub  = dark?CYAN:'#1a5f7a';
 
-  // Barra lateral izquierda
-  const barGrad = c.createLinearGradient(0, 260*s, 0, 1660*s);
-  barGrad.addColorStop(0, ORANGE);
-  barGrad.addColorStop(1, 'rgba(232,99,42,0.1)');
-  c.fillStyle = barGrad;
-  rrect(c, 28*s, 270*s, 6*s, 1380*s, 3*s);
-  c.fill();
+  // Barra lateral naranja
+  const barG=c.createLinearGradient(0,260*s,0,1700*s);
+  barG.addColorStop(0,ORANGE); barG.addColorStop(1,'rgba(232,99,42,0.08)');
+  c.fillStyle=barG;
+  pill(c,26*s,270*s,6*s,1420*s,3*s); c.fill();
 
-  // ── HEADER ──
-  c.font = `700 ${30*s}px system-ui,sans-serif`;
-  c.fillStyle = ORANGE;
-  c.fillText('RR', MX*s, HEADER_Y*s);
+  // ── HEADER zona segura top (y 260–400) ──
+  c.font=`800 ${32*s}px system-ui,sans-serif`;
+  c.fillStyle=ORANGE; c.fillText('RR',72*s,336*s);
+  c.font=`400 ${24*s}px system-ui,sans-serif`;
+  c.fillStyle=cSub; c.fillText('Recovery Room',120*s,336*s);
+  sep(c,72*s,(W-72)*s,380*s,dark);
 
-  c.font = `400 ${24*s}px system-ui,sans-serif`;
-  c.fillStyle = colorMuted;
-  c.fillText('Recovery Room', (MX+48)*s, HEADER_Y*s);
+  // ── CONTENIDO ──
+  if(tpl==='dato')         tDato(c,s,hl,cp,ct,cMain,cSub,dark);
+  else if(tpl==='detras')  tDetras(c,s,hl,cp,ct,cMain,cSub,dark);
+  else if(tpl==='cta')     tCTA(c,s,hl,cp,ct,cMain,cSub,dark);
+  else if(tpl==='poll')    tPoll(c,s,hl,cp,cMain,cSub,dark);
+  else                     tMot(c,s,hl,cp,ct,cMain,cSub,dark);
 
-  // Separador header
-  c.strokeStyle = isDark ? 'rgba(184,228,244,0.2)' : 'rgba(10,58,82,0.15)';
-  c.lineWidth = 1*s;
-  hline(c, MX*s, (W-MX)*s, HEADER_SEP*s);
-
-  // ── CONTENIDO según template ──
-  switch(tpl){
-    case 'dato':        drawDato(c,s,w,h,hl,cp,ct,colorText,colorMuted,isDark); break;
-    case 'detras':      drawDetras(c,s,w,h,hl,cp,ct,colorText,colorMuted,isDark); break;
-    case 'cta':         drawCTA(c,s,w,h,hl,cp,ct,colorText,colorMuted,isDark); break;
-    case 'poll':        drawPoll(c,s,w,h,hl,cp,colorText,colorMuted,isDark); break;
-    case 'motivacional':drawMot(c,s,w,h,hl,cp,ct,colorText,colorMuted,isDark); break;
-  }
-
-  // ── FOOTER ──
-  c.strokeStyle = isDark ? 'rgba(184,228,244,0.2)' : 'rgba(10,58,82,0.15)';
-  c.lineWidth = 1*s;
-  hline(c, MX*s, (W-MX)*s, FOOTER_SEP*s);
-
-  c.font = `400 ${22*s}px system-ui,sans-serif`;
-  c.fillStyle = colorMuted;
-  c.textAlign = 'center';
-  c.fillText('San Juan, Argentina', (W/2)*s, FOOTER_Y*s);
-  c.textAlign = 'left';
+  // ── FOOTER zona segura bot (y 1680–1780) ──
+  sep(c,72*s,(W-72)*s,1690*s,dark);
+  c.font=`400 ${22*s}px system-ui,sans-serif`;
+  c.fillStyle=cSub; c.textAlign='center';
+  c.fillText('San Juan, Argentina',(W/2)*s,1745*s);
+  c.textAlign='left';
 }
 
-// ── TEMPLATE: DATO ────────────────────────────────────────────────────
-// Layout fijo:
-//   Headline  → y 520  (grande, naranja)
-//   Copy      → y 780  (debajo del headline wrapeado)
-//   CTA btn   → centrado en y 1450
-function drawDato(c,s,w,h,hl,cp,ct,colorText,colorMuted,isDark){
-  const HL_Y  = 600;
-  const CP_Y  = 820;
-  const CTA_Y = 1450;
+// ════════════════════════════════════════════════════════
+// TEMPLATE 1 — DATO
+// Concepto: número/stat ocupa protagonismo total
+// Layout:
+//   Etiqueta pequeña      y 450
+//   HEADLINE GIGANTE      y 560–900  (fuente 110px, naranja)
+//   Línea divisora        y 940
+//   Copy descriptivo      y 1010–1150
+//   CTA botón             y 1480
+// ════════════════════════════════════════════════════════
+function tDato(c,s,hl,cp,ct,cMain,cSub,dark){
+  // Etiqueta
+  label(c,s,'DATO',450,dark);
 
-  // Headline
-  const hlLines = wrapLines(c, hl||'Escribí tu dato aquí', `700 ${80*s}px system-ui,sans-serif`, MW*s);
-  c.font = `700 ${80*s}px system-ui,sans-serif`;
-  c.fillStyle = ORANGE;
-  hlLines.slice(0,2).forEach((line,i) => c.fillText(line, MX*s, (HL_Y + i*92)*s));
+  // Headline gigante
+  const hlTxt=hl||'El frío no duele,\nrecupera.';
+  const hlLines=wrapL(c,hlTxt,`800 ${110*s}px system-ui,sans-serif`,(W-144)*s);
+  c.font=`800 ${110*s}px system-ui,sans-serif`;
+  c.fillStyle=ORANGE;
+  hlLines.slice(0,3).forEach((l,i)=>c.fillText(l,72*s,(560+i*126)*s));
+
+  // Divisor
+  const divY=560+(hlLines.slice(0,3).length*126)+40;
+  c.strokeStyle=dark?'rgba(184,228,244,0.2)':'rgba(10,58,82,0.15)';
+  c.lineWidth=1.5*s;
+  c.beginPath(); c.moveTo(72*s,divY*s); c.lineTo(480*s,divY*s); c.stroke();
 
   // Copy
-  const cpLines = wrapLines(c, cp||'Descripción o contexto de este dato.', `400 ${34*s}px system-ui,sans-serif`, MW*s);
-  c.font = `400 ${34*s}px system-ui,sans-serif`;
-  c.fillStyle = colorText;
-  cpLines.slice(0,3).forEach((line,i) => c.fillText(line, MX*s, (CP_Y + i*48)*s));
+  const cpTxt=cp||'3 minutos en agua fría activan vasoconstricción y reducen el DOMS hasta un 30%.';
+  const cpLines=wrapL(c,cpTxt,`400 ${34*s}px system-ui,sans-serif`,(W-144)*s);
+  c.font=`400 ${34*s}px system-ui,sans-serif`;
+  c.fillStyle=cMain;
+  cpLines.slice(0,3).forEach((l,i)=>c.fillText(l,72*s,(divY+80+i*50)*s));
 
   // CTA
-  if(ct) drawCTABtn(c,s,ct,CTA_Y);
+  if(ct) ctaBtn(c,s,ct,1480);
 }
 
-// ── TEMPLATE: DETRÁS ─────────────────────────────────────────────────
-// Layout fijo:
-//   Chip      → y 480
-//   Ícono     → círculo centrado y 580–760
-//   Headline  → y 860
-//   Copy      → y 1060
-//   CTA       → y 1450
-function drawDetras(c,s,w,h,hl,cp,ct,colorText,colorMuted,isDark){
-  const CHIP_Y = 480;
-  const ICON_CY= 680;
-  const HL_Y   = 880;
-  const CP_Y   = 1060;
-  const CTA_Y  = 1450;
+// ════════════════════════════════════════════════════════
+// TEMPLATE 2 — DETRÁS
+// Concepto: humanizar la marca, mostrar proceso
+// Layout:
+//   Etiqueta              y 450
+//   Ícono grande centrado y 560–780
+//   Headline              y 860  (fuente 72px, blanco)
+//   Copy                  y 1060
+//   CTA                   y 1480
+// ════════════════════════════════════════════════════════
+function tDetras(c,s,hl,cp,ct,cMain,cSub,dark){
+  label(c,s,'BEHIND THE SCENES',450,dark);
 
-  drawChip(c,s,'BEHIND THE SCENES', CHIP_Y, isDark);
-
-  // Círculo ícono
-  c.fillStyle = isDark ? 'rgba(184,228,244,0.08)' : 'rgba(10,58,82,0.06)';
-  c.beginPath(); c.arc((W/2)*s, ICON_CY*s, 90*s, 0, Math.PI*2); c.fill();
-  c.font = `${80*s}px system-ui,sans-serif`;
-  c.textAlign = 'center';
-  c.fillText('🎬', (W/2)*s, (ICON_CY+28)*s);
-  c.textAlign = 'left';
+  // Ícono con círculo
+  c.fillStyle=dark?'rgba(184,228,244,0.07)':'rgba(10,58,82,0.06)';
+  c.beginPath(); c.arc((W/2)*s,670*s,110*s,0,Math.PI*2); c.fill();
+  c.strokeStyle=ORANGE; c.lineWidth=2*s;
+  c.beginPath(); c.arc((W/2)*s,670*s,110*s,0,Math.PI*2); c.stroke();
+  c.font=`${100*s}px system-ui,sans-serif`;
+  c.textAlign='center'; c.fillText('🎬',(W/2)*s,710*s); c.textAlign='left';
 
   // Headline
-  const hlLines = wrapLines(c, hl||'Así trabajamos cada día', `500 ${60*s}px system-ui,sans-serif`, MW*s);
-  c.font = `500 ${60*s}px system-ui,sans-serif`;
-  c.fillStyle = colorText;
-  hlLines.slice(0,2).forEach((line,i) => c.fillText(line, MX*s, (HL_Y + i*70)*s));
+  const hlLines=wrapL(c,hl||'Así es un día en Recovery Room.',`700 ${72*s}px system-ui,sans-serif`,(W-144)*s);
+  c.font=`700 ${72*s}px system-ui,sans-serif`; c.fillStyle=cMain;
+  hlLines.slice(0,2).forEach((l,i)=>c.fillText(l,72*s,(880+i*86)*s));
 
   // Copy
-  const cpLines = wrapLines(c, cp||'Conocé el equipo y los equipos detrás de cada sesión.', `400 ${32*s}px system-ui,sans-serif`, MW*s);
-  c.font = `400 ${32*s}px system-ui,sans-serif`;
-  c.fillStyle = colorMuted;
-  cpLines.slice(0,3).forEach((line,i) => c.fillText(line, MX*s, (CP_Y + i*44)*s));
+  const cpLines=wrapL(c,cp||'Cada detalle está pensado para que tu recuperación sea efectiva.',`400 ${34*s}px system-ui,sans-serif`,(W-144)*s);
+  c.font=`400 ${34*s}px system-ui,sans-serif`; c.fillStyle=cSub;
+  cpLines.slice(0,3).forEach((l,i)=>c.fillText(l,72*s,(1100+i*48)*s));
 
-  if(ct) drawCTABtn(c,s,ct,CTA_Y);
+  if(ct) ctaBtn(c,s,ct,1480);
 }
 
-// ── TEMPLATE: CTA ────────────────────────────────────────────────────
-// Layout fijo:
-//   Chip      → y 480
-//   Ícono     → centrado y 600–740
-//   Headline  → y 820
-//   Copy      → y 1020
-//   CTA       → y 1450
-function drawCTA(c,s,w,h,hl,cp,ct,colorText,colorMuted,isDark){
-  const CHIP_Y = 480;
-  const ICON_Y = 720;
-  const HL_Y   = 840;
-  const CP_Y   = 1050;
-  const CTA_Y  = 1450;
+// ════════════════════════════════════════════════════════
+// TEMPLATE 3 — CTA
+// Concepto: urgencia y conversión directa
+// Layout:
+//   Etiqueta urgencia     y 440
+//   Headline grande       y 560  (fuente 90px, naranja)
+//   Copy                  y 960
+//   Bloque beneficios     y 1100–1300  (3 líneas con ✓)
+//   CTA botón grande      y 1460
+// ════════════════════════════════════════════════════════
+function tCTA(c,s,hl,cp,ct,cMain,cSub,dark){
+  label(c,s,'OFERTA',440,dark);
 
-  drawChip(c,s,'OFERTA ESPECIAL', CHIP_Y, isDark);
+  const hlLines=wrapL(c,hl||'Primera sesión con 20% OFF',`800 ${90*s}px system-ui,sans-serif`,(W-144)*s);
+  c.font=`800 ${90*s}px system-ui,sans-serif`; c.fillStyle=ORANGE;
+  hlLines.slice(0,3).forEach((l,i)=>c.fillText(l,72*s,(580+i*106)*s));
 
-  c.font = `${90*s}px system-ui,sans-serif`;
-  c.textAlign = 'center';
-  c.fillText('⚡', (W/2)*s, ICON_Y*s);
-  c.textAlign = 'left';
+  const cpY=580+(hlLines.slice(0,3).length*106)+60;
+  const cpLines=wrapL(c,cp||'Solo esta semana. Cupos limitados.',`400 ${36*s}px system-ui,sans-serif`,(W-144)*s);
+  c.font=`400 ${36*s}px system-ui,sans-serif`; c.fillStyle=cMain;
+  cpLines.slice(0,2).forEach((l,i)=>c.fillText(l,72*s,(cpY+i*50)*s));
 
-  const hlLines = wrapLines(c, hl||'¡No te lo pierdas!', `700 ${68*s}px system-ui,sans-serif`, MW*s);
-  c.font = `700 ${68*s}px system-ui,sans-serif`;
-  c.fillStyle = ORANGE;
-  hlLines.slice(0,2).forEach((line,i) => c.fillText(line, MX*s, (HL_Y + i*80)*s));
+  // Beneficios ✓
+  const bY=cpY+160;
+  const items=['Sauna finlandesa','Crioterapia profesional','Reserva online'];
+  c.font=`500 ${30*s}px system-ui,sans-serif`;
+  items.forEach((item,i)=>{
+    c.fillStyle=ORANGE; c.fillText('✓',72*s,(bY+i*52)*s);
+    c.fillStyle=cMain;  c.fillText(item,120*s,(bY+i*52)*s);
+  });
 
-  const cpLines = wrapLines(c, cp||'Reservá tu sesión de recuperación hoy.', `400 ${32*s}px system-ui,sans-serif`, MW*s);
-  c.font = `400 ${32*s}px system-ui,sans-serif`;
-  c.fillStyle = colorText;
-  cpLines.slice(0,3).forEach((line,i) => c.fillText(line, MX*s, (CP_Y + i*44)*s));
-
-  drawCTABtn(c,s,ct||'Reservar ahora', CTA_Y);
+  ctaBtn(c,s,ct||'Reservar ahora',1460);
 }
 
-// ── TEMPLATE: POLL ───────────────────────────────────────────────────
-// Layout fijo:
-//   Chip      → y 480
-//   Headline  → y 640
-//   Copy      → y 820
-//   Botones   → y 1300–1460
-function drawPoll(c,s,w,h,hl,cp,colorText,colorMuted,isDark){
-  const CHIP_Y = 480;
-  const HL_Y   = 660;
-  const CP_Y   = 860;
-  const BTN_Y  = 1300;
-  const BTN_H  = 140;
+// ════════════════════════════════════════════════════════
+// TEMPLATE 4 — POLL
+// Concepto: máximo engagement, interacción binaria
+// Layout:
+//   Etiqueta              y 440
+//   Pregunta grande       y 560  (fuente 88px)
+//   Copy                  y 840
+//   Botones FRÍO/SAUNA    y 1060–1240  (altura generosa)
+//   Micro-copy            y 1320
+// ════════════════════════════════════════════════════════
+function tPoll(c,s,hl,cp,cMain,cSub,dark){
+  label(c,s,'VOTÁ',440,dark);
 
-  drawChip(c,s,'ENCUESTA', CHIP_Y, isDark);
+  const hlLines=wrapL(c,hl||'¿Qué preferís después de entrenar?',`700 ${82*s}px system-ui,sans-serif`,(W-144)*s);
+  c.font=`700 ${82*s}px system-ui,sans-serif`; c.fillStyle=cMain;
+  hlLines.slice(0,3).forEach((l,i)=>c.fillText(l,72*s,(580+i*96)*s));
 
-  const hlLines = wrapLines(c, hl||'¿Cuál preferís?', `500 ${64*s}px system-ui,sans-serif`, MW*s);
-  c.font = `500 ${64*s}px system-ui,sans-serif`;
-  c.fillStyle = colorText;
-  hlLines.slice(0,2).forEach((line,i) => c.fillText(line, MX*s, (HL_Y + i*76)*s));
+  const cpTxt=cp||'Contanos tu favorito 👇';
+  c.font=`400 ${32*s}px system-ui,sans-serif`; c.fillStyle=cSub;
+  c.fillText(cpTxt,72*s,900*s);
 
-  const cpLines = wrapLines(c, cp||'Votá y contanos tu favorito', `400 ${32*s}px system-ui,sans-serif`, MW*s);
-  c.font = `400 ${32*s}px system-ui,sans-serif`;
-  c.fillStyle = colorMuted;
-  cpLines.slice(0,2).forEach((line,i) => c.fillText(line, MX*s, (CP_Y + i*44)*s));
+  // Botón FRÍO
+  const bw=(W-168)/2, bh=200, gap=24;
+  c.fillStyle='#0d3d54';
+  pill(c,72*s,1040*s,bw*s,bh*s,20*s); c.fill();
+  c.strokeStyle=CYAN; c.lineWidth=2.5*s;
+  pill(c,72*s,1040*s,bw*s,bh*s,20*s); c.stroke();
+  c.font=`700 ${44*s}px system-ui,sans-serif`;
+  c.fillStyle=CYAN; c.textAlign='center';
+  c.fillText('🧊',(72+bw/2)*s,1120*s);
+  c.font=`700 ${36*s}px system-ui,sans-serif`;
+  c.fillText('FRÍO',(72+bw/2)*s,1175*s);
 
-  // Botones FRÍO / SAUNA
-  const gap = 24;
-  const bw  = (MW - gap) / 2;
+  // Botón SAUNA
+  const sx=72+bw+gap;
+  c.fillStyle='rgba(232,99,42,0.12)';
+  pill(c,sx*s,1040*s,bw*s,bh*s,20*s); c.fill();
+  c.strokeStyle=ORANGE; c.lineWidth=2.5*s;
+  pill(c,sx*s,1040*s,bw*s,bh*s,20*s); c.stroke();
+  c.fillStyle=ORANGE;
+  c.font=`700 ${44*s}px system-ui,sans-serif`;
+  c.fillText('🔥',(sx+bw/2)*s,1120*s);
+  c.font=`700 ${36*s}px system-ui,sans-serif`;
+  c.fillText('SAUNA',(sx+bw/2)*s,1175*s);
+  c.textAlign='left';
 
-  // FRÍO
-  c.fillStyle = '#1a5f7a';
-  rrect(c, MX*s, BTN_Y*s, bw*s, BTN_H*s, 14*s); c.fill();
-  c.strokeStyle = CYAN; c.lineWidth = 2*s;
-  rrect(c, MX*s, BTN_Y*s, bw*s, BTN_H*s, 14*s); c.stroke();
-  c.font = `600 ${38*s}px system-ui,sans-serif`;
-  c.fillStyle = CYAN;
-  c.textAlign = 'center';
-  c.fillText('🧊  FRÍO', (MX + bw/2)*s, (BTN_Y + BTN_H*0.6)*s);
-
-  // SAUNA
-  c.fillStyle = 'rgba(232,99,42,0.15)';
-  rrect(c, (MX+bw+gap)*s, BTN_Y*s, bw*s, BTN_H*s, 14*s); c.fill();
-  c.strokeStyle = ORANGE; c.lineWidth = 2*s;
-  rrect(c, (MX+bw+gap)*s, BTN_Y*s, bw*s, BTN_H*s, 14*s); c.stroke();
-  c.fillStyle = ORANGE;
-  c.fillText('🔥  SAUNA', (MX+bw+gap + bw/2)*s, (BTN_Y + BTN_H*0.6)*s);
-  c.textAlign = 'left';
+  // Micro-copy
+  c.font=`400 ${26*s}px system-ui,sans-serif`;
+  c.fillStyle=dark?'rgba(184,228,244,0.4)':'rgba(10,58,82,0.4)';
+  c.textAlign='center';
+  c.fillText('Ambos disponibles en Recovery Room',(W/2)*s,1310*s);
+  c.textAlign='left';
 }
 
-// ── TEMPLATE: MOTIVACIONAL ───────────────────────────────────────────
-// Layout fijo:
-//   Chip      → y 480
-//   Comilla   → decorativa y 560
-//   Headline  → y 720
-//   Copy      → y 1120
-//   CTA       → y 1450
-function drawMot(c,s,w,h,hl,cp,ct,colorText,colorMuted,isDark){
-  const CHIP_Y  = 480;
-  const QUOT_Y  = 740;
-  const HL_Y    = 760;
-  const CP_Y    = 1120;
-  const CTA_Y   = 1450;
+// ════════════════════════════════════════════════════════
+// TEMPLATE 5 — MOTIVACIONAL
+// Concepto: frase impacto, headline domina toda la story
+// Layout:
+//   Línea de crédito top  y 450  (pequeño, cyan)
+//   FRASE GIGANTE         y 560–1200  (fuente 96px, blanco, serif)
+//   Línea autora          y 1280
+//   CTA                   y 1460
+// ════════════════════════════════════════════════════════
+function tMot(c,s,hl,cp,ct,cMain,cSub,dark){
+  // Comilla abierta decorativa — grande, bien posicionada
+  c.font=`900 ${260*s}px Georgia,serif`;
+  c.fillStyle='rgba(232,99,42,0.15)';
+  c.fillText('\u201C',52*s,660*s);
 
-  drawChip(c,s,'MOTIVACIÓN', CHIP_Y, isDark);
+  // Etiqueta pequeña arriba
+  c.font=`600 ${22*s}px system-ui,sans-serif`;
+  c.fillStyle=ORANGE;
+  c.fillText('MOTIVACIÓN',72*s,460*s);
 
-  // Comilla decorativa grande
-  c.font = `700 ${220*s}px Georgia,serif`;
-  c.fillStyle = 'rgba(232,99,42,0.12)';
-  c.fillText('"', (MX-10)*s, QUOT_Y*s);
+  // Frase principal — grande, dominante
+  const hlTxt=hl||'La recuperación es parte del entrenamiento.';
+  const hlLines=wrapL(c,hlTxt,`italic 300 ${90*s}px Georgia,serif`,(W-180)*s);
+  c.font=`italic 300 ${90*s}px Georgia,serif`;
+  c.fillStyle=cMain;
+  hlLines.slice(0,5).forEach((l,i)=>c.fillText(l,72*s,(580+i*108)*s));
 
-  // Headline en itálica
-  const hlLines = wrapLines(c, hl||'La recuperación es parte del entrenamiento.', `italic 400 ${52*s}px Georgia,serif`, MW*s);
-  c.font = `italic 400 ${52*s}px Georgia,serif`;
-  c.fillStyle = colorText;
-  hlLines.slice(0,4).forEach((line,i) => c.fillText(line, MX*s, (HL_Y + i*64)*s));
+  // Comilla cierre
+  const closeY=580+(hlLines.slice(0,5).length*108)+20;
+  c.font=`900 ${140*s}px Georgia,serif`;
+  c.fillStyle='rgba(232,99,42,0.15)';
+  c.textAlign='right';
+  c.fillText('\u201D',(W-72)*s,closeY*s);
+  c.textAlign='left';
 
-  // Copy
-  const cpLines = wrapLines(c, cp||'Recovery Room · San Juan', `400 ${28*s}px system-ui,sans-serif`, MW*s);
-  c.font = `400 ${28*s}px system-ui,sans-serif`;
-  c.fillStyle = colorMuted;
-  cpLines.slice(0,2).forEach((line,i) => c.fillText(line, MX*s, (CP_Y + i*38)*s));
+  // Línea autora
+  c.fillStyle=ORANGE; c.fillRect(72*s,(closeY+60)*s,60*s,3*s);
+  c.font=`500 ${26*s}px system-ui,sans-serif`;
+  c.fillStyle=cSub;
+  const subTxt=cp||'Recovery Room · San Juan';
+  c.fillText(subTxt,72*s,(closeY+110)*s);
 
-  if(ct) drawCTABtn(c,s,ct,CTA_Y);
+  if(ct) ctaBtn(c,s,ct,1460);
 }
 
-// ── HELPERS ──────────────────────────────────────────────────────────
+// ── HELPERS ─────────────────────────────────────────────────────────
 
-// Chip centrado: recibe Y del tope del chip
-function drawChip(c,s,label,topY,isDark){
-  const fontSize = 22;
-  c.font = `500 ${fontSize*s}px system-ui,sans-serif`;
-  const tw  = c.measureText(label).width;
-  const ph  = 40*s, pw = tw + 48*s;
-  const cx  = (W/2)*s;
-  c.fillStyle = isDark ? 'rgba(232,99,42,0.18)' : 'rgba(232,99,42,0.12)';
-  rrect(c, cx-pw/2, topY*s, pw, ph, ph/2); c.fill();
-  c.strokeStyle = ORANGE; c.lineWidth = 1.5*s;
-  rrect(c, cx-pw/2, topY*s, pw, ph, ph/2); c.stroke();
-  c.fillStyle = ORANGE;
-  c.textAlign = 'center';
-  c.fillText(label, cx, topY*s + ph*0.68);
-  c.textAlign = 'left';
+function label(c,s,txt,y,dark){
+  c.font=`700 ${20*s}px system-ui,sans-serif`;
+  const tw=c.measureText(txt).width;
+  const pw=tw+44*s, ph=38*s, cx=(W/2)*s;
+  c.fillStyle=dark?'rgba(232,99,42,0.15)':'rgba(232,99,42,0.1)';
+  pill(c,cx-pw/2,y*s,pw,ph,ph/2); c.fill();
+  c.strokeStyle=ORANGE; c.lineWidth=1.5*s;
+  pill(c,cx-pw/2,y*s,pw,ph,ph/2); c.stroke();
+  c.fillStyle=ORANGE; c.textAlign='center';
+  c.fillText(txt,cx,(y+26)*s);
+  c.textAlign='left';
 }
 
-// Botón CTA naranja centrado, centerY = centro vertical del botón
-function drawCTABtn(c,s,label,centerY){
-  c.font = `600 ${34*s}px system-ui,sans-serif`;
-  const disp = label.length>30 ? label.substring(0,30)+'…' : label;
-  const tw   = c.measureText(disp).width;
-  const bw   = Math.min(tw + 100*s, (W-160)*s);
-  const bh   = 96*s;
-  const cx   = (W/2)*s;
-  c.fillStyle = ORANGE;
-  rrect(c, cx-bw/2, centerY*s-bh/2, bw, bh, bh/2); c.fill();
-  c.fillStyle = WHITE;
-  c.textAlign = 'center';
-  c.fillText(disp, cx, centerY*s + 12*s);
-  c.textAlign = 'left';
+function ctaBtn(c,s,txt,cy){
+  c.font=`700 ${36*s}px system-ui,sans-serif`;
+  const disp=txt.length>28?txt.slice(0,28)+'…':txt;
+  const tw=c.measureText(disp).width;
+  const bw=Math.min(tw+110*s,(W-160)*s), bh=100*s, cx=(W/2)*s;
+  c.fillStyle=ORANGE;
+  pill(c,cx-bw/2,cy*s-bh/2,bw,bh,bh/2); c.fill();
+  // Subtle inner highlight
+  c.fillStyle='rgba(255,255,255,0.08)';
+  pill(c,cx-bw/2,cy*s-bh/2,bw,bh/2,bh/2); c.fill();
+  c.fillStyle=WHITE; c.textAlign='center';
+  c.fillText(disp,cx,cy*s+13*s);
+  c.textAlign='left';
 }
 
-// Wrap texto → devuelve array de líneas
-function wrapLines(c,text,font,maxW){
-  c.font = font;
-  const words = text.split(' ');
-  const lines = [];
-  let line = '';
-  for(const word of words){
-    const test = line ? line+' '+word : word;
-    if(c.measureText(test).width > maxW && line){ lines.push(line); line=word; }
-    else line=test;
+function sep(c,x1,x2,y,dark){
+  c.strokeStyle=dark?'rgba(184,228,244,0.15)':'rgba(10,58,82,0.12)';
+  c.lineWidth=1; c.beginPath(); c.moveTo(x1,y); c.lineTo(x2,y); c.stroke();
+}
+
+function wrapL(c,txt,font,maxW){
+  c.font=font;
+  const words=txt.replace(/\n/g,' \n ').split(' ');
+  const lines=[]; let line='';
+  for(const w of words){
+    if(w==='\n'){lines.push(line);line='';continue;}
+    const t=line?line+' '+w:w;
+    if(c.measureText(t).width>maxW&&line){lines.push(line);line=w;}
+    else line=t;
   }
   if(line) lines.push(line);
   return lines;
 }
 
-// Rounded rect path (no stroke/fill — llamar después)
-function rrect(c,x,y,w,h,r){
+function pill(c,x,y,w,h,r){
   c.beginPath();
   c.moveTo(x+r,y);
   c.lineTo(x+w-r,y); c.quadraticCurveTo(x+w,y,x+w,y+r);
@@ -429,35 +406,22 @@ function rrect(c,x,y,w,h,r){
   c.closePath();
 }
 
-function hline(c,x1,x2,y){
-  c.beginPath(); c.moveTo(x1,y); c.lineTo(x2,y); c.stroke();
-}
-
-// ── DESCARGA ─────────────────────────────────────────────────────────
+// ── DESCARGA ────────────────────────────────────────────────────────
 function download(){
-  const hl = document.getElementById('headline').value;
-  const cp = document.getElementById('copy').value;
-  const ct = document.getElementById('cta').value;
-
-  const hi = document.createElement('canvas');
-  hi.width  = W;   // 1080px real
-  hi.height = H;   // 1920px real
-  // dibuja a escala 1 (s = 1, todo en px reales)
-  drawStory(hi, 1, hl, cp, ct);
-
-  hi.toBlob(blob => {
-    if(!blob){ alert('No se pudo generar el PNG. Usá Chrome o Edge.'); return; }
-    const url = URL.createObjectURL(blob);
-    const a   = document.createElement('a');
-    a.href     = url;
-    a.download = 'recoveryroom_story_'+tpl+'.png';
-    document.body.appendChild(a);
-    a.click();
-    setTimeout(()=>{ URL.revokeObjectURL(url); a.remove(); }, 1000);
-  }, 'image/png');
+  const hl=v('headline'), cp=v('copy'), ct=v('cta');
+  const hi=document.createElement('canvas');
+  hi.width=W; hi.height=H;
+  render(hi,1,hl,cp,ct);
+  hi.toBlob(blob=>{
+    if(!blob){alert('Error al generar PNG. Usá Chrome o Edge.');return;}
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url; a.download='rr_story_'+tpl+'.png';
+    document.body.appendChild(a); a.click();
+    setTimeout(()=>{URL.revokeObjectURL(url);a.remove();},1000);
+  },'image/png');
 }
 
-// Init
 upd();
 </script>
 </body>
