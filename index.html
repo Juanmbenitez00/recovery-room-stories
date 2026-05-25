@@ -66,7 +66,6 @@ canvas{display:block}
     <div class="divider"></div>
     <button class="dl-btn" onclick="download()">⬇ Descargar PNG 1080×1920</button>
   </div>
-
   <div class="preview-wrap">
     <div class="preview-label">Preview escalado — canvas real 1080×1920 px</div>
     <div class="canvas-container">
@@ -77,11 +76,29 @@ canvas{display:block}
 </div>
 
 <script>
-const W=1080,H=1920,SCALE=3;
-const SAFE_TOP=250,SAFE_BOT=250,SAFE_H=H-SAFE_TOP-SAFE_BOT;
-const NAVY='#0A3A52',ORANGE='#E8632A',CYAN='#B8E4F4',WHITE='#FFFFFF';
-let tpl='dato',bg=NAVY;
+// ── Constantes globales ──────────────────────────────────────────────
+const W = 1080, H = 1920;
+const PREVIEW_H = 600; // altura fija del preview en pantalla
+const NAVY='#0A3A52', ORANGE='#E8632A', CYAN='#B8E4F4', WHITE='#FFFFFF';
 
+// Zonas fijas en px sobre canvas 1080×1920
+// Header:  y 260–390
+// Content: y 420–1530
+// Footer:  y 1560–1660
+const HEADER_Y   = 320;   // baseline del texto header
+const HEADER_SEP = 390;   // línea separadora header
+const CONTENT_TOP= 460;   // inicio zona contenido
+const CONTENT_BOT= 1530;  // fin zona contenido
+const FOOTER_SEP = 1570;
+const FOOTER_Y   = 1640;  // baseline footer
+
+// Márgenes laterales
+const MX = 80;  // margen x izquierdo para texto
+const MW = W - MX*2; // ancho máximo de texto
+
+let tpl='dato', bg=NAVY;
+
+// ── Controles UI ─────────────────────────────────────────────────────
 function setTpl(t,el){
   tpl=t;
   document.querySelectorAll('.tpl-btn').forEach(b=>b.classList.remove('active'));
@@ -89,8 +106,8 @@ function setTpl(t,el){
   document.getElementById('cta-field').style.display=(t==='poll')?'none':'flex';
   upd();
 }
-function setBg(c,el){
-  bg=c;
+function setBg(color,el){
+  bg=color;
   document.querySelectorAll('.bg-swatch').forEach(s=>s.classList.remove('active'));
   el.classList.add('active');
   upd();
@@ -103,173 +120,344 @@ function upd(){
   document.getElementById('cp-cnt').textContent=cp.length+'/100';
   document.getElementById('cta-cnt').textContent=ct.length+'/35';
   const cv=document.getElementById('cv');
-  cv.width=Math.round(W/SCALE);
-  cv.height=Math.round(H/SCALE);
-  draw(cv,1,hl,cp,ct);
+  // Preview: escala para que quepa en PREVIEW_H
+  const scale = PREVIEW_H / H;
+  cv.width  = Math.round(W * scale);
+  cv.height = PREVIEW_H;
+  drawStory(cv, scale, hl, cp, ct);
 }
 
-function draw(canvas,scale,hl,cp,ct){
-  const s=scale/SCALE,w=W*s,h=H*s;
-  canvas.width=w;canvas.height=h;
-  const c=canvas.getContext('2d');
-  c.fillStyle=bg;c.fillRect(0,0,w,h);
-  if(bg===NAVY){
-    c.fillStyle='rgba(184,228,244,0.04)';
-    for(let i=0;i<w;i+=36*s)for(let j=0;j<h;j+=36*s){c.beginPath();c.arc(i,j,1.5*s,0,Math.PI*2);c.fill();}
+// ── Función principal de dibujo ───────────────────────────────────────
+// s = escala (1 = full 1080×1920, <1 = preview)
+function drawStory(canvas, s, hl, cp, ct){
+  const c = canvas.getContext('2d');
+  const w = canvas.width, h = canvas.height;
+
+  // Fondo
+  c.fillStyle = bg;
+  c.fillRect(0,0,w,h);
+
+  const isDark = bg === NAVY;
+  const colorText  = isDark ? WHITE   : NAVY;
+  const colorMuted = isDark ? CYAN    : '#2a6a8a';
+
+  // Barra lateral izquierda
+  const barGrad = c.createLinearGradient(0, 260*s, 0, 1660*s);
+  barGrad.addColorStop(0, ORANGE);
+  barGrad.addColorStop(1, 'rgba(232,99,42,0.1)');
+  c.fillStyle = barGrad;
+  rrect(c, 28*s, 270*s, 6*s, 1380*s, 3*s);
+  c.fill();
+
+  // ── HEADER ──
+  c.font = `700 ${30*s}px system-ui,sans-serif`;
+  c.fillStyle = ORANGE;
+  c.fillText('RR', MX*s, HEADER_Y*s);
+
+  c.font = `400 ${24*s}px system-ui,sans-serif`;
+  c.fillStyle = colorMuted;
+  c.fillText('Recovery Room', (MX+48)*s, HEADER_Y*s);
+
+  // Separador header
+  c.strokeStyle = isDark ? 'rgba(184,228,244,0.2)' : 'rgba(10,58,82,0.15)';
+  c.lineWidth = 1*s;
+  hline(c, MX*s, (W-MX)*s, HEADER_SEP*s);
+
+  // ── CONTENIDO según template ──
+  switch(tpl){
+    case 'dato':        drawDato(c,s,w,h,hl,cp,ct,colorText,colorMuted,isDark); break;
+    case 'detras':      drawDetras(c,s,w,h,hl,cp,ct,colorText,colorMuted,isDark); break;
+    case 'cta':         drawCTA(c,s,w,h,hl,cp,ct,colorText,colorMuted,isDark); break;
+    case 'poll':        drawPoll(c,s,w,h,hl,cp,colorText,colorMuted,isDark); break;
+    case 'motivacional':drawMot(c,s,w,h,hl,cp,ct,colorText,colorMuted,isDark); break;
   }
-  const isDark=bg===NAVY;
-  const tm=isDark?WHITE:NAVY;
-  const tmuted=isDark?CYAN:'#2a6a8a';
-  // accent bar
-  const gr=c.createLinearGradient(0,SAFE_TOP*s,0,(H-SAFE_BOT)*s);
-  gr.addColorStop(0,ORANGE);gr.addColorStop(1,'rgba(232,99,42,0.15)');
-  c.fillStyle=gr;
-  c.beginPath();rr(c,32*s,(SAFE_TOP+20)*s,5*s,(SAFE_H-40)*s,3*s);c.fill();
-  // header
-  const hm=(SAFE_TOP+70)*s;
-  c.font=`600 ${28*s}px system-ui,sans-serif`;c.fillStyle=ORANGE;c.fillText('RR',70*s,hm);
-  c.font=`400 ${22*s}px system-ui,sans-serif`;c.fillStyle=tmuted;c.fillText('Recovery Room',112*s,hm);
-  const sepY=(SAFE_TOP+100)*s;
-  c.strokeStyle=isDark?'rgba(184,228,244,0.18)':'rgba(10,58,82,0.12)';c.lineWidth=1*s;
-  c.beginPath();c.moveTo(70*s,sepY);c.lineTo(w-70*s,sepY);c.stroke();
-  // content area
-  const cTop=(SAFE_TOP+140)*s,cBot=(H-SAFE_BOT-120)*s,cH=cBot-cTop,cMid=cTop+cH/2;
-  if(tpl==='dato') drawDato(c,s,w,h,cTop,cMid,cBot,cH,hl,cp,ct,tm,tmuted,isDark);
-  else if(tpl==='detras') drawDetras(c,s,w,h,cTop,cMid,cBot,cH,hl,cp,ct,tm,tmuted,isDark);
-  else if(tpl==='cta') drawCTA(c,s,w,h,cTop,cMid,cBot,cH,hl,cp,ct,tm,tmuted,isDark);
-  else if(tpl==='poll') drawPoll(c,s,w,h,cTop,cMid,cBot,cH,hl,cp,tm,tmuted,isDark);
-  else if(tpl==='motivacional') drawMot(c,s,w,h,cTop,cMid,cBot,cH,hl,cp,ct,tm,tmuted,isDark);
-  // footer
-  const fsY=(H-SAFE_BOT-110)*s;
-  c.strokeStyle=isDark?'rgba(184,228,244,0.18)':'rgba(10,58,82,0.12)';
-  c.beginPath();c.moveTo(70*s,fsY);c.lineTo(w-70*s,fsY);c.stroke();
-  c.font=`400 ${22*s}px system-ui,sans-serif`;c.fillStyle=tmuted;
-  c.textAlign='center';c.fillText('San Juan, Argentina',w/2,(H-SAFE_BOT-60)*s);c.textAlign='left';
+
+  // ── FOOTER ──
+  c.strokeStyle = isDark ? 'rgba(184,228,244,0.2)' : 'rgba(10,58,82,0.15)';
+  c.lineWidth = 1*s;
+  hline(c, MX*s, (W-MX)*s, FOOTER_SEP*s);
+
+  c.font = `400 ${22*s}px system-ui,sans-serif`;
+  c.fillStyle = colorMuted;
+  c.textAlign = 'center';
+  c.fillText('San Juan, Argentina', (W/2)*s, FOOTER_Y*s);
+  c.textAlign = 'left';
 }
 
-function drawDato(c,s,w,h,cTop,cMid,cBot,cH,hl,cp,ct,tm,tmuted,isDark){
-  const cardPad=40*s,cardH=cH*0.72,cardY=cTop+(cH-cardH)*0.3;
-  c.fillStyle=isDark?'rgba(184,228,244,0.06)':'rgba(10,58,82,0.05)';
-  c.beginPath();rr(c,70*s,cardY,w-140*s,cardH,16*s);c.fill();
-  c.strokeStyle=isDark?'rgba(184,228,244,0.14)':'rgba(10,58,82,0.1)';c.lineWidth=1*s;
-  c.beginPath();rr(c,70*s,cardY,w-140*s,cardH,16*s);c.stroke();
-  const hlY=cardY+cardPad+20*s;
-  wt(c,hl||'Escribí tu dato',90*s,hlY,w-160*s,ORANGE,`700 ${68*s}px system-ui,sans-serif`,78*s,2);
-  const copyY=hlY+80*s+30*s;
-  wt(c,cp||'Descripción o contexto del dato importante.',90*s,copyY,w-160*s,tm,`400 ${30*s}px system-ui,sans-serif`,42*s,3);
-  if(ct) ctaBtn(c,s,w,cBot-50*s,ct);
+// ── TEMPLATE: DATO ────────────────────────────────────────────────────
+// Layout fijo:
+//   Headline  → y 520  (grande, naranja)
+//   Copy      → y 780  (debajo del headline wrapeado)
+//   CTA btn   → centrado en y 1450
+function drawDato(c,s,w,h,hl,cp,ct,colorText,colorMuted,isDark){
+  const HL_Y  = 600;
+  const CP_Y  = 820;
+  const CTA_Y = 1450;
+
+  // Headline
+  const hlLines = wrapLines(c, hl||'Escribí tu dato aquí', `700 ${80*s}px system-ui,sans-serif`, MW*s);
+  c.font = `700 ${80*s}px system-ui,sans-serif`;
+  c.fillStyle = ORANGE;
+  hlLines.slice(0,2).forEach((line,i) => c.fillText(line, MX*s, (HL_Y + i*92)*s));
+
+  // Copy
+  const cpLines = wrapLines(c, cp||'Descripción o contexto de este dato.', `400 ${34*s}px system-ui,sans-serif`, MW*s);
+  c.font = `400 ${34*s}px system-ui,sans-serif`;
+  c.fillStyle = colorText;
+  cpLines.slice(0,3).forEach((line,i) => c.fillText(line, MX*s, (CP_Y + i*48)*s));
+
+  // CTA
+  if(ct) drawCTABtn(c,s,ct,CTA_Y);
 }
 
-function drawDetras(c,s,w,h,cTop,cMid,cBot,cH,hl,cp,ct,tm,tmuted,isDark){
-  const chipH=34*s;
-  chip(c,s,w,cTop+cH*0.04,chipH,'BEHIND THE SCENES',isDark);
-  const iconY=cTop+cH*0.15+chipH+10*s;
-  c.fillStyle=isDark?'rgba(184,228,244,0.08)':'rgba(10,58,82,0.06)';
-  c.beginPath();c.arc(w/2,iconY+80*s,80*s,0,Math.PI*2);c.fill();
-  c.font=`${70*s}px system-ui,sans-serif`;c.textAlign='center';c.fillText('🎬',w/2,iconY+115*s);c.textAlign='left';
-  const hlY=iconY+200*s;
-  wt(c,hl||'Detrás de escena',90*s,hlY,w-160*s,tm,`500 ${52*s}px system-ui,sans-serif`,62*s,2);
-  wt(c,cp||'Así es un día en Recovery Room.',90*s,hlY+140*s,w-160*s,isDark?CYAN:'#2a6a8a',`400 ${30*s}px system-ui,sans-serif`,40*s,3);
-  if(ct) ctaBtn(c,s,w,cBot-50*s,ct);
+// ── TEMPLATE: DETRÁS ─────────────────────────────────────────────────
+// Layout fijo:
+//   Chip      → y 480
+//   Ícono     → círculo centrado y 580–760
+//   Headline  → y 860
+//   Copy      → y 1060
+//   CTA       → y 1450
+function drawDetras(c,s,w,h,hl,cp,ct,colorText,colorMuted,isDark){
+  const CHIP_Y = 480;
+  const ICON_CY= 680;
+  const HL_Y   = 880;
+  const CP_Y   = 1060;
+  const CTA_Y  = 1450;
+
+  drawChip(c,s,'BEHIND THE SCENES', CHIP_Y, isDark);
+
+  // Círculo ícono
+  c.fillStyle = isDark ? 'rgba(184,228,244,0.08)' : 'rgba(10,58,82,0.06)';
+  c.beginPath(); c.arc((W/2)*s, ICON_CY*s, 90*s, 0, Math.PI*2); c.fill();
+  c.font = `${80*s}px system-ui,sans-serif`;
+  c.textAlign = 'center';
+  c.fillText('🎬', (W/2)*s, (ICON_CY+28)*s);
+  c.textAlign = 'left';
+
+  // Headline
+  const hlLines = wrapLines(c, hl||'Así trabajamos cada día', `500 ${60*s}px system-ui,sans-serif`, MW*s);
+  c.font = `500 ${60*s}px system-ui,sans-serif`;
+  c.fillStyle = colorText;
+  hlLines.slice(0,2).forEach((line,i) => c.fillText(line, MX*s, (HL_Y + i*70)*s));
+
+  // Copy
+  const cpLines = wrapLines(c, cp||'Conocé el equipo y los equipos detrás de cada sesión.', `400 ${32*s}px system-ui,sans-serif`, MW*s);
+  c.font = `400 ${32*s}px system-ui,sans-serif`;
+  c.fillStyle = colorMuted;
+  cpLines.slice(0,3).forEach((line,i) => c.fillText(line, MX*s, (CP_Y + i*44)*s));
+
+  if(ct) drawCTABtn(c,s,ct,CTA_Y);
 }
 
-function drawCTA(c,s,w,h,cTop,cMid,cBot,cH,hl,cp,ct,tm,tmuted,isDark){
-  const chipH=34*s;
-  chip(c,s,w,cTop+cH*0.04,chipH,'OFERTA ESPECIAL',isDark);
-  const iconY=cTop+cH*0.1+chipH+10*s;
-  c.font=`${90*s}px system-ui,sans-serif`;c.textAlign='center';c.fillText('⚡',w/2,iconY+80*s);c.textAlign='left';
-  const hlY=iconY+140*s;
-  wt(c,hl||'¡No te lo pierdas!',90*s,hlY,w-160*s,ORANGE,`700 ${58*s}px system-ui,sans-serif`,68*s,2);
-  wt(c,cp||'Reservá tu sesión de recuperación hoy.',90*s,hlY+160*s,w-160*s,tm,`400 ${30*s}px system-ui,sans-serif`,40*s,3);
-  ctaBtn(c,s,w,cBot-50*s,ct||'Reservar ahora');
+// ── TEMPLATE: CTA ────────────────────────────────────────────────────
+// Layout fijo:
+//   Chip      → y 480
+//   Ícono     → centrado y 600–740
+//   Headline  → y 820
+//   Copy      → y 1020
+//   CTA       → y 1450
+function drawCTA(c,s,w,h,hl,cp,ct,colorText,colorMuted,isDark){
+  const CHIP_Y = 480;
+  const ICON_Y = 720;
+  const HL_Y   = 840;
+  const CP_Y   = 1050;
+  const CTA_Y  = 1450;
+
+  drawChip(c,s,'OFERTA ESPECIAL', CHIP_Y, isDark);
+
+  c.font = `${90*s}px system-ui,sans-serif`;
+  c.textAlign = 'center';
+  c.fillText('⚡', (W/2)*s, ICON_Y*s);
+  c.textAlign = 'left';
+
+  const hlLines = wrapLines(c, hl||'¡No te lo pierdas!', `700 ${68*s}px system-ui,sans-serif`, MW*s);
+  c.font = `700 ${68*s}px system-ui,sans-serif`;
+  c.fillStyle = ORANGE;
+  hlLines.slice(0,2).forEach((line,i) => c.fillText(line, MX*s, (HL_Y + i*80)*s));
+
+  const cpLines = wrapLines(c, cp||'Reservá tu sesión de recuperación hoy.', `400 ${32*s}px system-ui,sans-serif`, MW*s);
+  c.font = `400 ${32*s}px system-ui,sans-serif`;
+  c.fillStyle = colorText;
+  cpLines.slice(0,3).forEach((line,i) => c.fillText(line, MX*s, (CP_Y + i*44)*s));
+
+  drawCTABtn(c,s,ct||'Reservar ahora', CTA_Y);
 }
 
-function drawPoll(c,s,w,h,cTop,cMid,cBot,cH,hl,cp,tm,tmuted,isDark){
-  const chipH=34*s;
-  chip(c,s,w,cTop+cH*0.04,chipH,'ENCUESTA',isDark);
-  const hlY=cTop+cH*0.04+chipH+20*s;
-  wt(c,hl||'¿Cuál preferís?',90*s,hlY,w-160*s,tm,`500 ${56*s}px system-ui,sans-serif`,64*s,2);
-  wt(c,cp||'Votá y contanos tu favorito',90*s,hlY+140*s,w-160*s,isDark?CYAN:'#2a6a8a',`400 ${28*s}px system-ui,sans-serif`,38*s,2);
-  const btnGap=20*s,btnW=(w-180*s-btnGap)/2,btnH=120*s,btnY=cBot-btnH-20*s;
-  c.fillStyle='#1a5f7a';c.beginPath();rr(c,90*s,btnY,btnW,btnH,14*s);c.fill();
-  c.strokeStyle=CYAN;c.lineWidth=1.5*s;c.beginPath();rr(c,90*s,btnY,btnW,btnH,14*s);c.stroke();
-  c.font=`500 ${36*s}px system-ui,sans-serif`;c.fillStyle=CYAN;c.textAlign='center';
-  c.fillText('🧊  FRÍO',90*s+btnW/2,btnY+btnH*0.58);
-  c.fillStyle=ORANGE+'33';c.beginPath();rr(c,90*s+btnW+btnGap,btnY,btnW,btnH,14*s);c.fill();
-  c.strokeStyle=ORANGE;c.beginPath();rr(c,90*s+btnW+btnGap,btnY,btnW,btnH,14*s);c.stroke();
-  c.fillStyle=ORANGE;c.fillText('🔥  SAUNA',90*s+btnW+btnGap+btnW/2,btnY+btnH*0.58);
-  c.textAlign='left';
+// ── TEMPLATE: POLL ───────────────────────────────────────────────────
+// Layout fijo:
+//   Chip      → y 480
+//   Headline  → y 640
+//   Copy      → y 820
+//   Botones   → y 1300–1460
+function drawPoll(c,s,w,h,hl,cp,colorText,colorMuted,isDark){
+  const CHIP_Y = 480;
+  const HL_Y   = 660;
+  const CP_Y   = 860;
+  const BTN_Y  = 1300;
+  const BTN_H  = 140;
+
+  drawChip(c,s,'ENCUESTA', CHIP_Y, isDark);
+
+  const hlLines = wrapLines(c, hl||'¿Cuál preferís?', `500 ${64*s}px system-ui,sans-serif`, MW*s);
+  c.font = `500 ${64*s}px system-ui,sans-serif`;
+  c.fillStyle = colorText;
+  hlLines.slice(0,2).forEach((line,i) => c.fillText(line, MX*s, (HL_Y + i*76)*s));
+
+  const cpLines = wrapLines(c, cp||'Votá y contanos tu favorito', `400 ${32*s}px system-ui,sans-serif`, MW*s);
+  c.font = `400 ${32*s}px system-ui,sans-serif`;
+  c.fillStyle = colorMuted;
+  cpLines.slice(0,2).forEach((line,i) => c.fillText(line, MX*s, (CP_Y + i*44)*s));
+
+  // Botones FRÍO / SAUNA
+  const gap = 24;
+  const bw  = (MW - gap) / 2;
+
+  // FRÍO
+  c.fillStyle = '#1a5f7a';
+  rrect(c, MX*s, BTN_Y*s, bw*s, BTN_H*s, 14*s); c.fill();
+  c.strokeStyle = CYAN; c.lineWidth = 2*s;
+  rrect(c, MX*s, BTN_Y*s, bw*s, BTN_H*s, 14*s); c.stroke();
+  c.font = `600 ${38*s}px system-ui,sans-serif`;
+  c.fillStyle = CYAN;
+  c.textAlign = 'center';
+  c.fillText('🧊  FRÍO', (MX + bw/2)*s, (BTN_Y + BTN_H*0.6)*s);
+
+  // SAUNA
+  c.fillStyle = 'rgba(232,99,42,0.15)';
+  rrect(c, (MX+bw+gap)*s, BTN_Y*s, bw*s, BTN_H*s, 14*s); c.fill();
+  c.strokeStyle = ORANGE; c.lineWidth = 2*s;
+  rrect(c, (MX+bw+gap)*s, BTN_Y*s, bw*s, BTN_H*s, 14*s); c.stroke();
+  c.fillStyle = ORANGE;
+  c.fillText('🔥  SAUNA', (MX+bw+gap + bw/2)*s, (BTN_Y + BTN_H*0.6)*s);
+  c.textAlign = 'left';
 }
 
-function drawMot(c,s,w,h,cTop,cMid,cBot,cH,hl,cp,ct,tm,tmuted,isDark){
-  const chipH=34*s;
-  chip(c,s,w,cTop+cH*0.04,chipH,'MOTIVACIÓN',isDark);
-  c.font=`700 ${200*s}px Georgia,serif`;c.fillStyle=ORANGE+'1A';c.fillText('"',55*s,cTop+cH*0.38);
-  const hlY=cTop+cH*0.25;
-  wt(c,hl||'"La recuperación es parte del entrenamiento."',90*s,hlY,w-160*s,tm,`italic 400 ${46*s}px Georgia,serif`,58*s,4);
-  wt(c,cp||'Recovery Room · San Juan',90*s,hlY+260*s,w-160*s,isDark?CYAN:'#2a6a8a',`400 ${26*s}px system-ui,sans-serif`,36*s,2);
-  if(ct) ctaBtn(c,s,w,cBot-50*s,ct);
+// ── TEMPLATE: MOTIVACIONAL ───────────────────────────────────────────
+// Layout fijo:
+//   Chip      → y 480
+//   Comilla   → decorativa y 560
+//   Headline  → y 720
+//   Copy      → y 1120
+//   CTA       → y 1450
+function drawMot(c,s,w,h,hl,cp,ct,colorText,colorMuted,isDark){
+  const CHIP_Y  = 480;
+  const QUOT_Y  = 740;
+  const HL_Y    = 760;
+  const CP_Y    = 1120;
+  const CTA_Y   = 1450;
+
+  drawChip(c,s,'MOTIVACIÓN', CHIP_Y, isDark);
+
+  // Comilla decorativa grande
+  c.font = `700 ${220*s}px Georgia,serif`;
+  c.fillStyle = 'rgba(232,99,42,0.12)';
+  c.fillText('"', (MX-10)*s, QUOT_Y*s);
+
+  // Headline en itálica
+  const hlLines = wrapLines(c, hl||'La recuperación es parte del entrenamiento.', `italic 400 ${52*s}px Georgia,serif`, MW*s);
+  c.font = `italic 400 ${52*s}px Georgia,serif`;
+  c.fillStyle = colorText;
+  hlLines.slice(0,4).forEach((line,i) => c.fillText(line, MX*s, (HL_Y + i*64)*s));
+
+  // Copy
+  const cpLines = wrapLines(c, cp||'Recovery Room · San Juan', `400 ${28*s}px system-ui,sans-serif`, MW*s);
+  c.font = `400 ${28*s}px system-ui,sans-serif`;
+  c.fillStyle = colorMuted;
+  cpLines.slice(0,2).forEach((line,i) => c.fillText(line, MX*s, (CP_Y + i*38)*s));
+
+  if(ct) drawCTABtn(c,s,ct,CTA_Y);
 }
 
-function chip(c,s,w,topY,ph,label,isDark){
-  c.font=`500 ${20*s}px system-ui,sans-serif`;
-  const tw=c.measureText(label).width,pw=tw+44*s,cx=w/2;
-  c.fillStyle=isDark?'rgba(232,99,42,0.18)':ORANGE+'22';
-  c.beginPath();rr(c,cx-pw/2,topY,pw,ph,ph/2);c.fill();
-  c.strokeStyle=ORANGE;c.lineWidth=1*s;
-  c.beginPath();rr(c,cx-pw/2,topY,pw,ph,ph/2);c.stroke();
-  c.fillStyle=ORANGE;c.textAlign='center';c.fillText(label,cx,topY+ph*0.68);c.textAlign='left';
+// ── HELPERS ──────────────────────────────────────────────────────────
+
+// Chip centrado: recibe Y del tope del chip
+function drawChip(c,s,label,topY,isDark){
+  const fontSize = 22;
+  c.font = `500 ${fontSize*s}px system-ui,sans-serif`;
+  const tw  = c.measureText(label).width;
+  const ph  = 40*s, pw = tw + 48*s;
+  const cx  = (W/2)*s;
+  c.fillStyle = isDark ? 'rgba(232,99,42,0.18)' : 'rgba(232,99,42,0.12)';
+  rrect(c, cx-pw/2, topY*s, pw, ph, ph/2); c.fill();
+  c.strokeStyle = ORANGE; c.lineWidth = 1.5*s;
+  rrect(c, cx-pw/2, topY*s, pw, ph, ph/2); c.stroke();
+  c.fillStyle = ORANGE;
+  c.textAlign = 'center';
+  c.fillText(label, cx, topY*s + ph*0.68);
+  c.textAlign = 'left';
 }
 
-function ctaBtn(c,s,w,centerY,label){
-  const cx=w/2;
-  c.font=`500 ${32*s}px system-ui,sans-serif`;
-  const bw=Math.min(c.measureText(label).width+100*s,w-200*s),bh=88*s;
-  c.fillStyle=ORANGE;c.beginPath();rr(c,cx-bw/2,centerY-bh/2,bw,bh,bh/2);c.fill();
-  c.fillStyle=WHITE;c.textAlign='center';
-  c.fillText(label.length>30?label.substring(0,30)+'…':label,cx,centerY+12*s);
-  c.textAlign='left';
+// Botón CTA naranja centrado, centerY = centro vertical del botón
+function drawCTABtn(c,s,label,centerY){
+  c.font = `600 ${34*s}px system-ui,sans-serif`;
+  const disp = label.length>30 ? label.substring(0,30)+'…' : label;
+  const tw   = c.measureText(disp).width;
+  const bw   = Math.min(tw + 100*s, (W-160)*s);
+  const bh   = 96*s;
+  const cx   = (W/2)*s;
+  c.fillStyle = ORANGE;
+  rrect(c, cx-bw/2, centerY*s-bh/2, bw, bh, bh/2); c.fill();
+  c.fillStyle = WHITE;
+  c.textAlign = 'center';
+  c.fillText(disp, cx, centerY*s + 12*s);
+  c.textAlign = 'left';
 }
 
-function wt(c,text,x,y,maxW,color,font,lineH,maxLines){
-  c.font=font;c.fillStyle=color;
-  const words=text.split(' ');let line='',lines=[];
+// Wrap texto → devuelve array de líneas
+function wrapLines(c,text,font,maxW){
+  c.font = font;
+  const words = text.split(' ');
+  const lines = [];
+  let line = '';
   for(const word of words){
-    const t=line?line+' '+word:word;
-    if(c.measureText(t).width>maxW&&line){lines.push(line);line=word;}else line=t;
+    const test = line ? line+' '+word : word;
+    if(c.measureText(test).width > maxW && line){ lines.push(line); line=word; }
+    else line=test;
   }
-  if(line)lines.push(line);
-  lines.slice(0,maxLines).forEach((l,i)=>c.fillText(l,x,y+i*lineH));
+  if(line) lines.push(line);
+  return lines;
 }
 
-function rr(c,x,y,w,h,r){
-  c.beginPath();c.moveTo(x+r,y);
-  c.lineTo(x+w-r,y);c.quadraticCurveTo(x+w,y,x+w,y+r);
-  c.lineTo(x+w,y+h-r);c.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
-  c.lineTo(x+r,y+h);c.quadraticCurveTo(x,y+h,x,y+h-r);
-  c.lineTo(x,y+r);c.quadraticCurveTo(x,y,x+r,y);
+// Rounded rect path (no stroke/fill — llamar después)
+function rrect(c,x,y,w,h,r){
+  c.beginPath();
+  c.moveTo(x+r,y);
+  c.lineTo(x+w-r,y); c.quadraticCurveTo(x+w,y,x+w,y+r);
+  c.lineTo(x+w,y+h-r); c.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+  c.lineTo(x+r,y+h); c.quadraticCurveTo(x,y+h,x,y+h-r);
+  c.lineTo(x,y+r); c.quadraticCurveTo(x,y,x+r,y);
   c.closePath();
 }
 
-function download(){
-  const hl=document.getElementById('headline').value;
-  const cp=document.getElementById('copy').value;
-  const ct=document.getElementById('cta').value;
-  const hi=document.createElement('canvas');
-  hi.width=W;hi.height=H;
-  document.body.appendChild(hi);
-  hi.style.cssText='position:fixed;left:-9999px;top:0';
-  draw(hi,SCALE,hl,cp,ct);
-  hi.toBlob(function(blob){
-    if(!blob){alert('Error al generar. Intentá con Chrome o Edge.');return;}
-    const url=URL.createObjectURL(blob);
-    const a=document.createElement('a');
-    a.href=url;a.download='recoveryroom_story_'+tpl+'.png';
-    document.body.appendChild(a);a.click();
-    setTimeout(()=>{URL.revokeObjectURL(url);a.remove();hi.remove();},1000);
-  },'image/png');
+function hline(c,x1,x2,y){
+  c.beginPath(); c.moveTo(x1,y); c.lineTo(x2,y); c.stroke();
 }
 
+// ── DESCARGA ─────────────────────────────────────────────────────────
+function download(){
+  const hl = document.getElementById('headline').value;
+  const cp = document.getElementById('copy').value;
+  const ct = document.getElementById('cta').value;
+
+  const hi = document.createElement('canvas');
+  hi.width  = W;   // 1080px real
+  hi.height = H;   // 1920px real
+  // dibuja a escala 1 (s = 1, todo en px reales)
+  drawStory(hi, 1, hl, cp, ct);
+
+  hi.toBlob(blob => {
+    if(!blob){ alert('No se pudo generar el PNG. Usá Chrome o Edge.'); return; }
+    const url = URL.createObjectURL(blob);
+    const a   = document.createElement('a');
+    a.href     = url;
+    a.download = 'recoveryroom_story_'+tpl+'.png';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(()=>{ URL.revokeObjectURL(url); a.remove(); }, 1000);
+  }, 'image/png');
+}
+
+// Init
 upd();
 </script>
 </body>
