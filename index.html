@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Recovery Room — Story Generator</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,sans-serif;background:#f0f0f0;padding:1.5rem;color:#222}
+.app{display:grid;grid-template-columns:300px 1fr;gap:1.5rem;align-items:start}
+.panel{background:#fff;border:1px solid #ddd;border-radius:12px;padding:1.25rem;display:flex;flex-direction:column;gap:1rem}
+.panel h3{font-size:11px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:.06em}
+.field{display:flex;flex-direction:column;gap:4px}
+.field label{font-size:13px;color:#555}
+.field input,.field textarea{font-size:14px;padding:8px 10px;border:1px solid #ccc;border-radius:8px;background:#fafafa;font-family:inherit;outline:none}
+.field input:focus,.field textarea:focus{border-color:#0A3A52}
+.field textarea{height:70px;resize:none}
+.char{font-size:11px;color:#aaa;text-align:right}
+.templates{display:flex;flex-wrap:wrap;gap:6px}
+.tpl-btn{font-size:12px;padding:5px 12px;border:1px solid #ccc;border-radius:6px;cursor:pointer;background:#f5f5f5;transition:all .15s}
+.tpl-btn.active{background:#0A3A52;color:#B8E4F4;border-color:#0A3A52}
+.bg-opts{display:flex;gap:8px}
+.bg-swatch{width:32px;height:32px;border-radius:6px;border:3px solid transparent;cursor:pointer;transition:border-color .15s}
+.bg-swatch.active{border-color:#E8632A}
+.preview-wrap{display:flex;flex-direction:column;align-items:center;gap:.75rem}
+.preview-label{font-size:12px;color:#666}
+.canvas-container{border-radius:12px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.2)}
+canvas{display:block}
+.dl-btn{width:100%;padding:11px;background:#E8632A;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;transition:opacity .15s}
+.dl-btn:hover{opacity:.88}
+.divider{height:1px;background:#eee}
+.safe-note{font-size:11px;color:#999;text-align:center}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="panel">
+    <h3>Template</h3>
+    <div class="templates">
+      <button class="tpl-btn active" onclick="setTpl('dato',this)">📊 Dato</button>
+      <button class="tpl-btn" onclick="setTpl('detras',this)">🎬 Detrás</button>
+      <button class="tpl-btn" onclick="setTpl('cta',this)">🚀 CTA</button>
+      <button class="tpl-btn" onclick="setTpl('poll',this)">📣 Poll</button>
+      <button class="tpl-btn" onclick="setTpl('motivacional',this)">💪 Motiv.</button>
+    </div>
+    <div class="divider"></div>
+    <h3>Contenido</h3>
+    <div class="field">
+      <label>Headline <span id="hl-cnt" class="char">0/50</span></label>
+      <input type="text" id="headline" maxlength="50" placeholder="Tu titular aquí..." oninput="upd()">
+    </div>
+    <div class="field">
+      <label>Copy <span id="cp-cnt" class="char">0/100</span></label>
+      <textarea id="copy" maxlength="100" placeholder="Texto descriptivo..." oninput="upd()"></textarea>
+    </div>
+    <div class="field" id="cta-field">
+      <label>CTA <span id="cta-cnt" class="char">0/35</span></label>
+      <input type="text" id="cta" maxlength="35" placeholder="Reservá tu sesión" oninput="upd()">
+    </div>
+    <div class="divider"></div>
+    <h3>Fondo</h3>
+    <div class="bg-opts">
+      <div class="bg-swatch active" style="background:#0A3A52" title="Navy" onclick="setBg('#0A3A52',this)"></div>
+      <div class="bg-swatch" style="background:#ffffff;border-color:#ccc" title="Blanco" onclick="setBg('#ffffff',this)"></div>
+      <div class="bg-swatch" style="background:#B8E4F4" title="Cyan" onclick="setBg('#B8E4F4',this)"></div>
+    </div>
+    <div class="divider"></div>
+    <button class="dl-btn" onclick="download()">⬇ Descargar PNG 1080×1920</button>
+  </div>
+
+  <div class="preview-wrap">
+    <div class="preview-label">Preview escalado — canvas real 1080×1920 px</div>
+    <div class="canvas-container">
+      <canvas id="cv"></canvas>
+    </div>
+    <div class="safe-note">🔒 Zona segura activa — compatible con UI de Instagram</div>
+  </div>
+</div>
+
+<script>
+const W=1080,H=1920,SCALE=3;
+const SAFE_TOP=250,SAFE_BOT=250,SAFE_H=H-SAFE_TOP-SAFE_BOT;
+const NAVY='#0A3A52',ORANGE='#E8632A',CYAN='#B8E4F4',WHITE='#FFFFFF';
+let tpl='dato',bg=NAVY;
+
+function setTpl(t,el){
+  tpl=t;
+  document.querySelectorAll('.tpl-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('cta-field').style.display=(t==='poll')?'none':'flex';
+  upd();
+}
+function setBg(c,el){
+  bg=c;
+  document.querySelectorAll('.bg-swatch').forEach(s=>s.classList.remove('active'));
+  el.classList.add('active');
+  upd();
+}
+function upd(){
+  const hl=document.getElementById('headline').value;
+  const cp=document.getElementById('copy').value;
+  const ct=document.getElementById('cta').value;
+  document.getElementById('hl-cnt').textContent=hl.length+'/50';
+  document.getElementById('cp-cnt').textContent=cp.length+'/100';
+  document.getElementById('cta-cnt').textContent=ct.length+'/35';
+  const cv=document.getElementById('cv');
+  cv.width=Math.round(W/SCALE);
+  cv.height=Math.round(H/SCALE);
+  draw(cv,1,hl,cp,ct);
+}
+
+function draw(canvas,scale,hl,cp,ct){
+  const s=scale/SCALE,w=W*s,h=H*s;
+  canvas.width=w;canvas.height=h;
+  const c=canvas.getContext('2d');
+  c.fillStyle=bg;c.fillRect(0,0,w,h);
+  if(bg===NAVY){
+    c.fillStyle='rgba(184,228,244,0.04)';
+    for(let i=0;i<w;i+=36*s)for(let j=0;j<h;j+=36*s){c.beginPath();c.arc(i,j,1.5*s,0,Math.PI*2);c.fill();}
+  }
+  const isDark=bg===NAVY;
+  const tm=isDark?WHITE:NAVY;
+  const tmuted=isDark?CYAN:'#2a6a8a';
+  // accent bar
+  const gr=c.createLinearGradient(0,SAFE_TOP*s,0,(H-SAFE_BOT)*s);
+  gr.addColorStop(0,ORANGE);gr.addColorStop(1,'rgba(232,99,42,0.15)');
+  c.fillStyle=gr;
+  c.beginPath();rr(c,32*s,(SAFE_TOP+20)*s,5*s,(SAFE_H-40)*s,3*s);c.fill();
+  // header
+  const hm=(SAFE_TOP+70)*s;
+  c.font=`600 ${28*s}px system-ui,sans-serif`;c.fillStyle=ORANGE;c.fillText('RR',70*s,hm);
+  c.font=`400 ${22*s}px system-ui,sans-serif`;c.fillStyle=tmuted;c.fillText('Recovery Room',112*s,hm);
+  const sepY=(SAFE_TOP+100)*s;
+  c.strokeStyle=isDark?'rgba(184,228,244,0.18)':'rgba(10,58,82,0.12)';c.lineWidth=1*s;
+  c.beginPath();c.moveTo(70*s,sepY);c.lineTo(w-70*s,sepY);c.stroke();
+  // content area
+  const cTop=(SAFE_TOP+140)*s,cBot=(H-SAFE_BOT-120)*s,cH=cBot-cTop,cMid=cTop+cH/2;
+  if(tpl==='dato') drawDato(c,s,w,h,cTop,cMid,cBot,cH,hl,cp,ct,tm,tmuted,isDark);
+  else if(tpl==='detras') drawDetras(c,s,w,h,cTop,cMid,cBot,cH,hl,cp,ct,tm,tmuted,isDark);
+  else if(tpl==='cta') drawCTA(c,s,w,h,cTop,cMid,cBot,cH,hl,cp,ct,tm,tmuted,isDark);
+  else if(tpl==='poll') drawPoll(c,s,w,h,cTop,cMid,cBot,cH,hl,cp,tm,tmuted,isDark);
+  else if(tpl==='motivacional') drawMot(c,s,w,h,cTop,cMid,cBot,cH,hl,cp,ct,tm,tmuted,isDark);
+  // footer
+  const fsY=(H-SAFE_BOT-110)*s;
+  c.strokeStyle=isDark?'rgba(184,228,244,0.18)':'rgba(10,58,82,0.12)';
+  c.beginPath();c.moveTo(70*s,fsY);c.lineTo(w-70*s,fsY);c.stroke();
+  c.font=`400 ${22*s}px system-ui,sans-serif`;c.fillStyle=tmuted;
+  c.textAlign='center';c.fillText('San Juan, Argentina',w/2,(H-SAFE_BOT-60)*s);c.textAlign='left';
+}
+
+function drawDato(c,s,w,h,cTop,cMid,cBot,cH,hl,cp,ct,tm,tmuted,isDark){
+  const cardPad=40*s,cardH=cH*0.72,cardY=cTop+(cH-cardH)*0.3;
+  c.fillStyle=isDark?'rgba(184,228,244,0.06)':'rgba(10,58,82,0.05)';
+  c.beginPath();rr(c,70*s,cardY,w-140*s,cardH,16*s);c.fill();
+  c.strokeStyle=isDark?'rgba(184,228,244,0.14)':'rgba(10,58,82,0.1)';c.lineWidth=1*s;
+  c.beginPath();rr(c,70*s,cardY,w-140*s,cardH,16*s);c.stroke();
+  const hlY=cardY+cardPad+20*s;
+  wt(c,hl||'Escribí tu dato',90*s,hlY,w-160*s,ORANGE,`700 ${68*s}px system-ui,sans-serif`,78*s,2);
+  const copyY=hlY+80*s+30*s;
+  wt(c,cp||'Descripción o contexto del dato importante.',90*s,copyY,w-160*s,tm,`400 ${30*s}px system-ui,sans-serif`,42*s,3);
+  if(ct) ctaBtn(c,s,w,cBot-50*s,ct);
+}
+
+function drawDetras(c,s,w,h,cTop,cMid,cBot,cH,hl,cp,ct,tm,tmuted,isDark){
+  const chipH=34*s;
+  chip(c,s,w,cTop+cH*0.04,chipH,'BEHIND THE SCENES',isDark);
+  const iconY=cTop+cH*0.15+chipH+10*s;
+  c.fillStyle=isDark?'rgba(184,228,244,0.08)':'rgba(10,58,82,0.06)';
+  c.beginPath();c.arc(w/2,iconY+80*s,80*s,0,Math.PI*2);c.fill();
+  c.font=`${70*s}px system-ui,sans-serif`;c.textAlign='center';c.fillText('🎬',w/2,iconY+115*s);c.textAlign='left';
+  const hlY=iconY+200*s;
+  wt(c,hl||'Detrás de escena',90*s,hlY,w-160*s,tm,`500 ${52*s}px system-ui,sans-serif`,62*s,2);
+  wt(c,cp||'Así es un día en Recovery Room.',90*s,hlY+140*s,w-160*s,isDark?CYAN:'#2a6a8a',`400 ${30*s}px system-ui,sans-serif`,40*s,3);
+  if(ct) ctaBtn(c,s,w,cBot-50*s,ct);
+}
+
+function drawCTA(c,s,w,h,cTop,cMid,cBot,cH,hl,cp,ct,tm,tmuted,isDark){
+  const chipH=34*s;
+  chip(c,s,w,cTop+cH*0.04,chipH,'OFERTA ESPECIAL',isDark);
+  const iconY=cTop+cH*0.1+chipH+10*s;
+  c.font=`${90*s}px system-ui,sans-serif`;c.textAlign='center';c.fillText('⚡',w/2,iconY+80*s);c.textAlign='left';
+  const hlY=iconY+140*s;
+  wt(c,hl||'¡No te lo pierdas!',90*s,hlY,w-160*s,ORANGE,`700 ${58*s}px system-ui,sans-serif`,68*s,2);
+  wt(c,cp||'Reservá tu sesión de recuperación hoy.',90*s,hlY+160*s,w-160*s,tm,`400 ${30*s}px system-ui,sans-serif`,40*s,3);
+  ctaBtn(c,s,w,cBot-50*s,ct||'Reservar ahora');
+}
+
+function drawPoll(c,s,w,h,cTop,cMid,cBot,cH,hl,cp,tm,tmuted,isDark){
+  const chipH=34*s;
+  chip(c,s,w,cTop+cH*0.04,chipH,'ENCUESTA',isDark);
+  const hlY=cTop+cH*0.04+chipH+20*s;
+  wt(c,hl||'¿Cuál preferís?',90*s,hlY,w-160*s,tm,`500 ${56*s}px system-ui,sans-serif`,64*s,2);
+  wt(c,cp||'Votá y contanos tu favorito',90*s,hlY+140*s,w-160*s,isDark?CYAN:'#2a6a8a',`400 ${28*s}px system-ui,sans-serif`,38*s,2);
+  const btnGap=20*s,btnW=(w-180*s-btnGap)/2,btnH=120*s,btnY=cBot-btnH-20*s;
+  c.fillStyle='#1a5f7a';c.beginPath();rr(c,90*s,btnY,btnW,btnH,14*s);c.fill();
+  c.strokeStyle=CYAN;c.lineWidth=1.5*s;c.beginPath();rr(c,90*s,btnY,btnW,btnH,14*s);c.stroke();
+  c.font=`500 ${36*s}px system-ui,sans-serif`;c.fillStyle=CYAN;c.textAlign='center';
+  c.fillText('🧊  FRÍO',90*s+btnW/2,btnY+btnH*0.58);
+  c.fillStyle=ORANGE+'33';c.beginPath();rr(c,90*s+btnW+btnGap,btnY,btnW,btnH,14*s);c.fill();
+  c.strokeStyle=ORANGE;c.beginPath();rr(c,90*s+btnW+btnGap,btnY,btnW,btnH,14*s);c.stroke();
+  c.fillStyle=ORANGE;c.fillText('🔥  SAUNA',90*s+btnW+btnGap+btnW/2,btnY+btnH*0.58);
+  c.textAlign='left';
+}
+
+function drawMot(c,s,w,h,cTop,cMid,cBot,cH,hl,cp,ct,tm,tmuted,isDark){
+  const chipH=34*s;
+  chip(c,s,w,cTop+cH*0.04,chipH,'MOTIVACIÓN',isDark);
+  c.font=`700 ${200*s}px Georgia,serif`;c.fillStyle=ORANGE+'1A';c.fillText('"',55*s,cTop+cH*0.38);
+  const hlY=cTop+cH*0.25;
+  wt(c,hl||'"La recuperación es parte del entrenamiento."',90*s,hlY,w-160*s,tm,`italic 400 ${46*s}px Georgia,serif`,58*s,4);
+  wt(c,cp||'Recovery Room · San Juan',90*s,hlY+260*s,w-160*s,isDark?CYAN:'#2a6a8a',`400 ${26*s}px system-ui,sans-serif`,36*s,2);
+  if(ct) ctaBtn(c,s,w,cBot-50*s,ct);
+}
+
+function chip(c,s,w,topY,ph,label,isDark){
+  c.font=`500 ${20*s}px system-ui,sans-serif`;
+  const tw=c.measureText(label).width,pw=tw+44*s,cx=w/2;
+  c.fillStyle=isDark?'rgba(232,99,42,0.18)':ORANGE+'22';
+  c.beginPath();rr(c,cx-pw/2,topY,pw,ph,ph/2);c.fill();
+  c.strokeStyle=ORANGE;c.lineWidth=1*s;
+  c.beginPath();rr(c,cx-pw/2,topY,pw,ph,ph/2);c.stroke();
+  c.fillStyle=ORANGE;c.textAlign='center';c.fillText(label,cx,topY+ph*0.68);c.textAlign='left';
+}
+
+function ctaBtn(c,s,w,centerY,label){
+  const cx=w/2;
+  c.font=`500 ${32*s}px system-ui,sans-serif`;
+  const bw=Math.min(c.measureText(label).width+100*s,w-200*s),bh=88*s;
+  c.fillStyle=ORANGE;c.beginPath();rr(c,cx-bw/2,centerY-bh/2,bw,bh,bh/2);c.fill();
+  c.fillStyle=WHITE;c.textAlign='center';
+  c.fillText(label.length>30?label.substring(0,30)+'…':label,cx,centerY+12*s);
+  c.textAlign='left';
+}
+
+function wt(c,text,x,y,maxW,color,font,lineH,maxLines){
+  c.font=font;c.fillStyle=color;
+  const words=text.split(' ');let line='',lines=[];
+  for(const word of words){
+    const t=line?line+' '+word:word;
+    if(c.measureText(t).width>maxW&&line){lines.push(line);line=word;}else line=t;
+  }
+  if(line)lines.push(line);
+  lines.slice(0,maxLines).forEach((l,i)=>c.fillText(l,x,y+i*lineH));
+}
+
+function rr(c,x,y,w,h,r){
+  c.beginPath();c.moveTo(x+r,y);
+  c.lineTo(x+w-r,y);c.quadraticCurveTo(x+w,y,x+w,y+r);
+  c.lineTo(x+w,y+h-r);c.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+  c.lineTo(x+r,y+h);c.quadraticCurveTo(x,y+h,x,y+h-r);
+  c.lineTo(x,y+r);c.quadraticCurveTo(x,y,x+r,y);
+  c.closePath();
+}
+
+function download(){
+  const hl=document.getElementById('headline').value;
+  const cp=document.getElementById('copy').value;
+  const ct=document.getElementById('cta').value;
+  const hi=document.createElement('canvas');
+  hi.width=W;hi.height=H;
+  document.body.appendChild(hi);
+  hi.style.cssText='position:fixed;left:-9999px;top:0';
+  draw(hi,SCALE,hl,cp,ct);
+  hi.toBlob(function(blob){
+    if(!blob){alert('Error al generar. Intentá con Chrome o Edge.');return;}
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;a.download='recoveryroom_story_'+tpl+'.png';
+    document.body.appendChild(a);a.click();
+    setTimeout(()=>{URL.revokeObjectURL(url);a.remove();hi.remove();},1000);
+  },'image/png');
+}
+
+upd();
+</script>
+</body>
+</html>
